@@ -72,6 +72,9 @@ def run_evaluation():
         q = item['question']
         gold = item['gold_sql']
         
+        import time
+        time.sleep(2.5) # Pace requests to stay under 30 RPM limit
+        
         # Zero Shot
         res_z = agent_zero.process_query(q, disable_semantics=True)
         iter_zero += res_z['iterations']

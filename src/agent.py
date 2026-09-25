@@ -1,3 +1,4 @@
+import time
 import os
 from litellm import completion
 from src.guardrails import validate_and_guard_sql
@@ -18,18 +19,24 @@ class TextToSQLAgent:
         self.schema = get_database_schema()
 
     def _call_llm(self, prompt: str) -> str:
-        try:
-            response = completion(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": BASE_SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt}
-                ],
-                api_key=os.environ.get("LLM_API_KEY")
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            raise Exception(f"LLM API Error: {str(e)}")
+        for attempt in range(5):
+            try:
+                response = completion(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": BASE_SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    api_key=os.environ.get("LLM_API_KEY")
+                )
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                error_str = str(e).lower()
+                if "rate limit" in error_str or "429" in error_str or "rate_limit_exceeded" in error_str:
+                    time.sleep(3)
+                    continue
+                raise Exception(f"LLM API Error: {str(e)}")
+        raise Exception("LLM API Error: Max rate limit retries exceeded")
 
     def process_query(self, question: str, disable_semantics: bool = False) -> dict:
         """
