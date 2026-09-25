@@ -12,7 +12,7 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     status: str
     final_sql: Optional[str]
-    data: Optional[List[Dict[str, Any]]]
+    results: Optional[List[Dict[str, Any]]]
     iterations: int
     repair_history: List[Dict[str, Any]]
 

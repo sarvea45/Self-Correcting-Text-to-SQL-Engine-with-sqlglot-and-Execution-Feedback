@@ -84,14 +84,14 @@ def run_evaluation():
         # Syntax/Schema Only
         res_ss = agent_ss.process_query(q, disable_semantics=True)
         iter_ss += res_ss['iterations']
-        repairs_ss += sum(1 for h in res_ss['repair_history'] if h['failure_class'] == 'Schema')
+        repairs_ss += sum(1 for h in res_ss['repair_history'] if h['failure_type'] == 'schema')
         if compare_results(gold, res_ss.get('final_sql', '')):
             correct_ss += 1
             
         # Full Pipeline
         res_f = agent_full.process_query(q, disable_semantics=False)
         iter_full += res_f['iterations']
-        repairs_full += sum(1 for h in res_f['repair_history'] if h['failure_class'] == 'Semantic')
+        repairs_full += sum(1 for h in res_f['repair_history'] if h['failure_type'] == 'semantic')
         if compare_results(gold, res_f.get('final_sql', '')):
             correct_full += 1
 

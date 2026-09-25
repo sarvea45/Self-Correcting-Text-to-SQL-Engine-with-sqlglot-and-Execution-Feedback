@@ -56,7 +56,7 @@ class TextToSQLAgent:
             sql_candidate = self._call_llm(current_prompt)
             
             # Keep history for next loops if needed
-            history_str = "\n".join([f"Attempt {h['iteration']} - {h['failure_class']}: {h['sql']}" for h in repair_history])
+            history_str = "\n".join([f"Attempt {h['attempt']} - {h['failure_type']}: {h['error_message']}" for h in repair_history])
             
             # State 2: AST Validation
             ast_check = validate_and_guard_sql(sql_candidate)
@@ -64,10 +64,9 @@ class TextToSQLAgent:
             
             if not ast_check['is_valid']:
                 repair_history.append({
-                    "iteration": iterations,
-                    "failure_class": "Syntax",
-                    "sql": sql_candidate,
-                    "error": ast_check['error']
+                    "attempt": iterations,
+                    "failure_type": "syntax",
+                    "error_message": ast_check['error']
                 })
                 if iterations >= self.max_attempts:
                     break
@@ -79,10 +78,9 @@ class TextToSQLAgent:
             
             if not success:
                 repair_history.append({
-                    "iteration": iterations,
-                    "failure_class": "Schema",
-                    "sql": sql,
-                    "error": error_msg
+                    "attempt": iterations,
+                    "failure_type": "schema",
+                    "error_message": error_msg
                 })
                 if iterations >= self.max_attempts:
                     break
@@ -94,10 +92,9 @@ class TextToSQLAgent:
                 sanity_check = evaluate_semantic_sanity(sql, results, question)
                 if sanity_check['is_suspicious']:
                     repair_history.append({
-                        "iteration": iterations,
-                        "failure_class": "Semantic",
-                        "sql": sql,
-                        "error": sanity_check['reason']
+                        "attempt": iterations,
+                        "failure_type": "semantic",
+                        "error_message": sanity_check['reason']
                     })
                     if iterations >= self.max_attempts:
                         break
@@ -108,7 +105,7 @@ class TextToSQLAgent:
             return {
                 "status": "success",
                 "final_sql": sql,
-                "data": results,
+                "results": results,
                 "iterations": iterations,
                 "repair_history": repair_history
             }
@@ -117,7 +114,7 @@ class TextToSQLAgent:
         return {
             "status": "failed",
             "final_sql": sql_candidate if 'sql_candidate' in locals() else None,
-            "data": None,
+            "results": None,
             "iterations": iterations,
             "repair_history": repair_history
         }
