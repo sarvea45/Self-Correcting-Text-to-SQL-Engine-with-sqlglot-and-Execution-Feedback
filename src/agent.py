@@ -33,7 +33,8 @@ class TextToSQLAgent:
             except Exception as e:
                 error_str = str(e).lower()
                 if "rate limit" in error_str or "429" in error_str or "rate_limit_exceeded" in error_str:
-                    time.sleep(3)
+                    print("Rate limit hit! Sleeping for 65 seconds to clear window...", flush=True)
+                    time.sleep(65)
                     continue
                 raise Exception(f"LLM API Error: {str(e)}")
         raise Exception("LLM API Error: Max rate limit retries exceeded")
